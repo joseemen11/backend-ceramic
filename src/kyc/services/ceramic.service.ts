@@ -11,6 +11,12 @@ const dynamicImport = new Function(
 export class CeramicService {
   private ceramic: any;
   private TileDocument: any;
+  public ready!: Promise<void>;
+
+  async onModuleInit() {
+    this.ready = this.bootstrap();
+    await this.ready;
+  }
 
   constructor() {
     this.bootstrap();
@@ -36,14 +42,17 @@ export class CeramicService {
   }
 
   async save(content: any) {
+    await this.ready;
     const doc = await this.TileDocument.create(this.ceramic, content, {
       controllers: [this.ceramic.did.id],
     });
-    await this.ceramic.pin.add(doc.id);
+
     return doc.id.toString();
   }
 
-  load(id: string) {
-    return this.TileDocument.load(this.ceramic, id).then((d: any) => d.content);
+  async load(id: string): Promise<any> {
+    await this.ready;
+    const doc = await this.TileDocument.load(this.ceramic, id);
+    return doc.content;
   }
 }
